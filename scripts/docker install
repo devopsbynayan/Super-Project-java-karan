@@ -1,0 +1,7 @@
+yum install docker -y
+systemctl enable docker.service
+systemctl enable containerd.service
+systemctl start docker.server
+docker ps
+chmod 777 /var/run/docker.sock
+docker ps
