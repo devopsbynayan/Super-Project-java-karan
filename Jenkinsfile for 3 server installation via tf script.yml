@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+    environment {
+        // This credential might be used by Terraform to authenticate with AWS
+        cred = credentials('aws-key') 
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                // Clones the specified Git repository. Assumes your Terraform code is in this repo.
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/devopsbynayan/Super-Project-java-karan.git']])
+            }
+        }
+
+        stage('terraform init') {
+            steps {
+                // Initializes the working directory, downloads provider plugins, and sets up backend
+                sh 'terraform init' 
+            }
+        }
+
+        stage('terraform plan') {
+            steps {
+                // Creates an execution plan, showing what actions will be taken
+                sh 'terraform plan' 
+            }
+        }
+
+        stage('terraform apply') {
+            steps {
+                // Executes the actions proposed in the plan to build or change the infrastructure
+                sh 'terraform apply -auto-approve'
+            }
+        }
+    }
+}
