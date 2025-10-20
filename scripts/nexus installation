@@ -16,7 +16,7 @@ sudo wget https://download.sonatype.com/nexus/3/nexus-3.65.0-02-unix.tar.gz
 
 4. Extract the tar file
 
-tar -xvf nexus-3.65.0-02-unix.tar.gz
+sudo tar -xvf nexus-3.65.0-02-unix.tar.gz
 
 5. Chang ename of nexus directory 
 
@@ -35,7 +35,7 @@ sudo chown -R nexus:nexus /opt/sonatype-work
 
 sudo vi /opt/nexus/bin/nexus.rc
 
-6. Add nexus as user
+##Add nexus as user
 
 run_as_user="nexus"
 
