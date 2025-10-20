@@ -30,6 +30,13 @@ sudo unzip sonarqube-10.1.0.73491.zip
 
 ## 6.. change the ownership of sonarqube 
 sudo chown -R sonarqube:sonarqube sonarqube-10.1.0.73491
+
+## change passwd od sonarqube
+cd.
+## sudo passwd sonarqube give redhat
+## sudo passwd ec2-user 
+## sudo passwd root 
+cd/opt
 su sonarqube
 
 ## 7.. start the server 
