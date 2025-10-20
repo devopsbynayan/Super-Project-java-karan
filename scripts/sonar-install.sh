@@ -14,7 +14,8 @@ sudo yum install java-17-amazon-corretto-devel
 sudo useradd sonarqube
 
 ##  3.. add sonarqube user in the sudoers list or visudo in the wheel group in order to user sudo
-
+## sudo visudo & below %wheel where allow  root to run any cmd from anywhere, add following
+## sonarqube ALL=(ALL)  ALL
 ## down the sonarqube community verison using tghe wget command
 
 wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.1.0.73491.zip
