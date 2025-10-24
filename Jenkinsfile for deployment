@@ -1,1 +1,100 @@
+pipeline {
+    agent any
 
+    environment {
+        cred = credentials('aws-key')
+    }
+
+    options {
+        buildDiscarder(logRotator(daysToKeepStr: '30', numToKeepStr: '5'))
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    tools {
+        maven 'MAVEN'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[url: 'https://github.com/devopsbynayan/Super-Project-java-karan.git']]
+                )
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def mvnHome = tool 'MAVEN'
+                    withSonarQubeEnv('sonarqube-server') {
+                        sh "${mvnHome}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=superproject -Dsonar.projectName='Super Project Java' -Dsonar.java.binaries=target/"
+                    }
+                }
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+        stage('Nexus Upload') {
+            steps {
+                nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: '3.145.207.162:8081',
+                    groupId: 'addressbook',
+                    version: '2.0-SNAPSHOT',
+                    repository: 'maven-snapshots',
+                    credentialsId: 'nexus',
+                    artifacts: [[
+                        artifactId: 'SuperProject',
+                        classifier: '',
+                        file: 'target/addressbook-2.0.war',
+                        type: 'war'
+                    ]]
+                )
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh "docker build -t 381492204839.dkr.ecr.us-east-2.amazonaws.com/super-project:${BUILD_NUMBER} ."
+            }
+        }
+
+        stage('Docker Push to ECR') {
+            steps {
+                sh "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 381492204839.dkr.ecr.us-east-2.amazonaws.com"
+                sh "docker tag super-project:latest 381492204839.dkr.ecr.us-east-2.amazonaws.com/super-project:latest"
+                sh "docker tag super-project:latest 381492204839.dkr.ecr.us-east-2.amazonaws.com/super-project:${BUILD_NUMBER}"
+                sh "docker push 381492204839.dkr.ecr.us-east-2.amazonaws.com/super-project:latest"
+                sh "docker push 381492204839.dkr.ecr.us-east-2.amazonaws.com/super-project:${BUILD_NUMBER}"
+            }
+        }
+
+        stage('K8s Deploy') {
+            steps {
+                sh "aws eks update-kubeconfig --region us-east-2 --name super-project"
+                sh "kubectl apply -f Application.yaml"
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Job completed"
+        }
+        success {
+            echo "Pipeline executed successfully ✅"
+        }
+        failure {
+            echo "Pipeline failed ❌"
+        }
+    }
+}
